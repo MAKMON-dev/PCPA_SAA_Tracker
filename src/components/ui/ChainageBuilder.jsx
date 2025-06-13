@@ -108,7 +108,7 @@ export default function ChainageBuilder() {
   };
 
   const sendToGoogleSheet = async (chainage) => {
-    const url = "https://script.google.com/macros/s/AKfycbDQDCW3m2yAYoznCRRFYoc47NaPXoA4jFCd-vJW6Kpx6b-JhWbB99jyh7QLZ6mUAE-BA/exec";
+    const url = "https://script.google.com/macros/s/AKfycbwIqR3RhgalyixzTuibAx0LSvswBb6QhdJ-XSJvg5me/exec";
     try {
       await fetch(url, {
         method: "POST",
