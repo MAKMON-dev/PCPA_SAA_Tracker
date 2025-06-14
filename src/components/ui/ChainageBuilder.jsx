@@ -81,21 +81,6 @@ export default function ChainageBuilder() {
     "Mobilisation des membres",
     "Impact territorial renforcé"
   ];
-  
-  const fetchFromGoogleSheet = async () => {
-    const url = "https://script.google.com/macros/s/AKfycby3X5fHf31GlY4vfdfw7He1ADh5aTfYqemI9GVuJ-aVMVsA25K6eUs77HuCIkOsXmqBdA/exec";
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        setChainages(data);
-      }
-    } catch (err) {
-      console.error("Erreur lors du chargement des données Google Sheets", err);
-    }
-  };
-
-
   const toggleIncidence = (name, type) => {
     setSelectedIncidences(prev => {
       const existing = prev.find(i => i.name === name);
@@ -114,25 +99,7 @@ export default function ChainageBuilder() {
     return item ? item[type] : false;
   };
 
-  
-  const [fetchedChainages, setFetchedChainages] = useState([]);
-
-  useEffect(() => {
-    if (adminMode) {
-      fetch("https://script.google.com/macros/s/AKfycbz9zjxV6Y8p-37u0FP000EMFMgoPs4z2rXwPfoER1RdkTv4hhVliXDyqFA_0ScyCMcn/exec")
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            setFetchedChainages(data);
-          } else {
-            console.error("Données invalides", data);
-          }
-        })
-        .catch(err => console.error("Erreur récupération Google Sheets :", err));
-    }
-  }, [adminMode]);
-
-const handleAddAction = () => {
+  const handleAddAction = () => {
     if (customAction.trim()) {
       actionGroups["Autre"].push(customAction.trim());
       setSelectedAction(customAction.trim());
@@ -202,16 +169,36 @@ const handleAddAction = () => {
   };
 
   
-  const handleAdminLogin = () => {
+useEffect(() => {
+  if (adminMode) {
+    fetch("https://script.google.com/macros/s/AKfycbz9zjxV6Y8p-37u0FP000EMFMgoPs4z2rXwPfoER1RdkTv4hhVliXDyqFA_0ScyCMcn/exec")
+      .then((res) => res.json())
+      .then((data) => {
+        const formatted = data.slice(1).map((row) => ({
+          date: row[0],
+          label: row[1],
+          structure: row[2],
+          responseType: row[3],
+          action: row[4],
+          msc: row[5],
+          incidencesPerceived: row[6],
+          incidencesRealized: row[7],
+        }));
+        setAdminResponses(formatted);
+      })
+      .catch((err) => console.error("Erreur de récupération Google Sheets :", err));
+  }
+}, [adminMode]);
+
+
+const handleAdminLogin = () => {
     if (adminPass === "pcpa2025") {
       setAdminMode(true);
-      fetchFromGoogleSheet();  // Ajout ici
     } else {
       alert("Mot de passe incorrect.");
     }
     setAdminPass("");
   };
-
 
   const handleExportCSV = () => {
     const rows = chainages.map(c => {
@@ -427,33 +414,4 @@ const handleAddAction = () => {
 );
 }
 
-
-      {adminMode && fetchedChainages.length > 0 && (
-        <div className="mt-6 border-t pt-4">
-          <h3 className="font-semibold mb-2">📊 Chaînages saisis (depuis Google Sheets)</h3>
-          <table className="w-full text-sm border">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border p-1">Horodatage</th>
-                <th className="border p-1">Code</th>
-                <th className="border p-1">Structure</th>
-                <th className="border p-1">Type</th>
-                <th className="border p-1">Action</th>
-                <th className="border p-1">MSC</th>
-                <th className="border p-1">🔄 Perçues</th>
-                <th className="border p-1">✅ Réalisées</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fetchedChainages.map((row, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
-                  {row.map((cell, i) => (
-                    <td key={i} className="border p-1">{cell}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
 
