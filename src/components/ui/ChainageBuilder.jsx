@@ -81,6 +81,21 @@ export default function ChainageBuilder() {
     "Mobilisation des membres",
     "Impact territorial renforcé"
   ];
+  
+  const fetchFromGoogleSheet = async () => {
+    const url = "https://script.google.com/macros/s/AKfycbz9zjxV6Y8p-37u0FP000EMFMgoPs4z2rXwPfoER1RdkTv4hhVliXDyqFA_0ScyCMcn/exec";
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setChainages(data);
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement des données Google Sheets", err);
+    }
+  };
+
+
   const toggleIncidence = (name, type) => {
     setSelectedIncidences(prev => {
       const existing = prev.find(i => i.name === name);
@@ -168,14 +183,17 @@ export default function ChainageBuilder() {
     setExpandedIndex(null);
   };
 
+  
   const handleAdminLogin = () => {
     if (adminPass === "pcpa2025") {
       setAdminMode(true);
+      fetchFromGoogleSheet();  // Ajout ici
     } else {
       alert("Mot de passe incorrect.");
     }
     setAdminPass("");
   };
+
 
   const handleExportCSV = () => {
     const rows = chainages.map(c => {
