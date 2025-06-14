@@ -15,6 +15,11 @@ export default function ChainageBuilder() {
   const [structureCount, setStructureCount] = useState({});
   const [adminMode, setAdminMode] = useState(false);
   const [adminPass, setAdminPass] = useState("");
+useEffect(() => {
+  if (adminMode) {
+    loadFromGoogleSheet();
+  }
+}, [adminMode]);
 
   const actionGroups = {
     "Structuration / organisation": [
@@ -120,6 +125,33 @@ export default function ChainageBuilder() {
       console.error("Erreur Google Sheets", err);
     }
   };
+const loadFromGoogleSheet = async () => {
+  try {
+    const res = await fetch("https://script.google.com/macros/s/AKfycbz9zjxV6Y8p-37u0FP000EMFMgoPs4z2rXwPfoER1RdkTv4hhVliXDyqFA_0ScyCMcn/exec");
+    const text = await res.text();
+
+    const rows = text.trim().split("\n").slice(1); // enleve l'en-tête
+    const parsed = rows.map(row => {
+      const cols = row.split(",");
+
+      return {
+        label: cols[1],
+        structure: cols[2],
+        responseType: cols[3],
+        action: cols[4],
+        msc: cols[5],
+        incidences: [
+          ...(cols[6] ? cols[6].split(" | ").map(name => ({ name, perceived: true, realized: false })) : []),
+          ...(cols[7] ? cols[7].split(" | ").map(name => ({ name, perceived: false, realized: true })) : [])
+        ]
+      };
+    });
+
+    setChainages(parsed);
+  } catch (err) {
+    console.error("Erreur chargement Google Sheet :", err);
+  }
+};
 
   const handleAddChainage = () => {
     const incidences = [...selectedIncidences];
