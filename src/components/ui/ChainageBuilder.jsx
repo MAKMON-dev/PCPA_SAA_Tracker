@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function ChainageBuilder() {
   const [structure, setStructure] = useState("");
@@ -83,7 +83,7 @@ export default function ChainageBuilder() {
   ];
   
   const fetchFromGoogleSheet = async () => {
-    const url = "https://script.google.com/macros/s/AKfycbz9zjxV6Y8p-37u0FP000EMFMgoPs4z2rXwPfoER1RdkTv4hhVliXDyqFA_0ScyCMcn/exec";
+    const url = "https://script.google.com/macros/s/AKfycbyH0tjm_ArsGOiHohlSG0iE4E1DGLUoBYYNozEZutTXnQjI3w52KJikJ5TsWBpJ8r2rDw/exec";
     try {
       const response = await fetch(url);
       const data = await response.json();
@@ -108,7 +108,6 @@ export default function ChainageBuilder() {
       }
     });
   };
-
   const isChecked = (name, type) => {
     const item = selectedIncidences.find(i => i.name === name);
     return item ? item[type] : false;
@@ -121,9 +120,8 @@ export default function ChainageBuilder() {
       setCustomAction("");
     }
   };
-
   const sendToGoogleSheet = async (chainage) => {
-    const url = "https://script.google.com/macros/s/AKfycbz9zjxV6Y8p-37u0FP000EMFMgoPs4z2rXwPfoER1RdkTv4hhVliXDyqFA_0ScyCMcn/exec";
+    const url = "https://script.google.com/macros/s/AKfycbyH0tjm_ArsGOiHohlSG0iE4E1DGLUoBYYNozEZutTXnQjI3w52KJikJ5TsWBpJ8r2rDw/exec";
     try {
       await fetch(url, {
         method: "POST",
@@ -193,6 +191,14 @@ export default function ChainageBuilder() {
     }
     setAdminPass("");
   };
+
+useEffect(() => {
+  if (adminMode) {
+    fetchFromGoogleSheet();
+  }
+}, [adminMode]);
+
+
 
 
   const handleExportCSV = () => {
