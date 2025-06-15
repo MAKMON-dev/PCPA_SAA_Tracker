@@ -15,7 +15,8 @@ export default function ChainageBuilder() {
   const [structureCount, setStructureCount] = useState({});
   const [adminMode, setAdminMode] = useState(false);
   const [adminPass, setAdminPass] = useState("");
-useEffect(() => {
+
+  useEffect(() => {
   if (adminMode) {
     loadFromGoogleSheet();
   }
@@ -201,28 +202,6 @@ const loadFromGoogleSheet = async () => {
   };
 
   
-useEffect(() => {
-  if (adminMode) {
-    fetch("https://script.google.com/macros/s/AKfycbz9zjxV6Y8p-37u0FP000EMFMgoPs4z2rXwPfoER1RdkTv4hhVliXDyqFA_0ScyCMcn/exec")
-      .then((res) => res.json())
-      .then((data) => {
-        const formatted = data.slice(1).map((row) => ({
-          date: row[0],
-          label: row[1],
-          structure: row[2],
-          responseType: row[3],
-          action: row[4],
-          msc: row[5],
-          incidencesPerceived: row[6],
-          incidencesRealized: row[7],
-        }));
-        setAdminResponses(formatted);
-      })
-      .catch((err) => console.error("Erreur de récupération Google Sheets :", err));
-  }
-}, [adminMode]);
-
-
 const handleAdminLogin = () => {
     if (adminPass === "pcpa2025") {
       setAdminMode(true);
