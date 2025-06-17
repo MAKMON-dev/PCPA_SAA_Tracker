@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 
 export default function ChainageBuilder() {
@@ -17,10 +18,11 @@ export default function ChainageBuilder() {
   const [adminPass, setAdminPass] = useState("");
 
   useEffect(() => {
-  if (adminMode) {
-    loadFromGoogleSheet();
-  }
-}, [adminMode]);
+    if (adminMode) {
+      console.log("Chargement des chaînages depuis Google Sheets...");
+      loadFromGoogleSheet1();
+    }
+  }, [adminMode]);
 
   const actionGroups = {
     "Structuration / organisation": [
@@ -114,7 +116,7 @@ export default function ChainageBuilder() {
   };
 
   const sendToGoogleSheet = async (chainage) => {
-    const url = "https://script.google.com/macros/s/AKfycbz9zjxV6Y8p-37u0FP000EMFMgoPs4z2rXwPfoER1RdkTv4hhVliXDyqFA_0ScyCMcn/exec";
+    const url = "https://script.google.com/macros/s/AKfycbyH0tjm_ArsGOiHohlSG0iE4E1DGLUoBYYNozEZutTXnQjI3w52KJikJ5TsWBpJ8r2rDw/exec";
     try {
       await fetch(url, {
         method: "POST",
@@ -126,34 +128,39 @@ export default function ChainageBuilder() {
       console.error("Erreur Google Sheets", err);
     }
   };
-const loadFromGoogleSheet = async () => {
-  try {
-    const res = await fetch("https://script.google.com/macros/s/AKfycbz9zjxV6Y8p-37u0FP000EMFMgoPs4z2rXwPfoER1RdkTv4hhVliXDyqFA_0ScyCMcn/exec");
-    const text = await res.text();
+  const loadFromGoogleSheet1 = async () => {
+    try {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbyH0tjm_ArsGOiHohlSG0iE4E1DGLUoBYYNozEZutTXnQjI3w52KJikJ5TsWBpJ8r2rDw/exec", {
+        method: 'GET',
+        mode: 'cors',
+      });
+      console.log("Réponse Google Sheets :", res);
 
-    const rows = text.trim().split("\n").slice(1); // enleve l'en-tête
-    const parsed = rows.map(row => {
-      const cols = row.split(",");
+      // MODIFICATION ICI : Utiliser res.json() au lieu de res.text()
+      const data = await res.json();
+      console.log("Données reçues de Google Sheets :", data);
 
-      return {
-        label: cols[1],
-        structure: cols[2],
-        responseType: cols[3],
-        action: cols[4],
-        msc: cols[5],
-        incidences: [
-          ...(cols[6] ? cols[6].split(" | ").map(name => ({ name, perceived: true, realized: false })) : []),
-          ...(cols[7] ? cols[7].split(" | ").map(name => ({ name, perceived: false, realized: true })) : [])
-        ]
-      };
-    });
+      const parsed = data.map(row => {
 
-    setChainages(parsed);
-  } catch (err) {
-    console.error("Erreur chargement Google Sheet :", err);
-  }
-};
+        return {
+          label: row.Code, // Assurez-vous que les clés sont les noms de colonnes correctes de votre objet retourné par doGet
+          structure: row.Structure,
+          responseType: row.Type,
+          action: row.Action,
+          msc: row.MSC,
+          incidences: [
+            ...(row['Perçues'] ? row['Perçues'].split(" | ").map(name => ({ name, perceived: true, realized: false })) : []),
+            ...(row['Réalisées'] ? row['Réalisées'].split(" | ").map(name => ({ name, perceived: false, realized: true })) : [])
+          ]
+        };
+      });
 
+      console.log("Chaînages chargés depuis Google Sheets :", parsed);
+      setChainages(parsed);
+    } catch (err) {
+      console.error("Erreur chargement Google Sheet :", err);
+    }
+  };
   const handleAddChainage = () => {
     const incidences = [...selectedIncidences];
 
@@ -201,8 +208,8 @@ const loadFromGoogleSheet = async () => {
     setExpandedIndex(null);
   };
 
-  
-const handleAdminLogin = () => {
+
+  const handleAdminLogin = () => {
     if (adminPass === "pcpa2025") {
       setAdminMode(true);
     } else {
@@ -348,81 +355,81 @@ const handleAdminLogin = () => {
       >
         ➕ Ajouter
       </button>
-    {chainages.length > 0 && (
-      <div className="mt-8 space-y-2">
-        <h3 className="font-semibold text-md">Chaînages enregistrés</h3>
+      {chainages.length > 0 && (
+        <div className="mt-8 space-y-2">
+          <h3 className="font-semibold text-md">Chaînages enregistrés</h3>
 
-        <div className="text-sm text-gray-600">
-          <span>🔄 : incidence perçue</span> &nbsp;&nbsp;
-          <span>✅ : incidence réalisée</span>
-        </div>
+          <div className="text-sm text-gray-600">
+            <span>🔄 : incidence perçue</span> &nbsp;&nbsp;
+            <span>✅ : incidence réalisée</span>
+          </div>
 
-        <table className="w-full mt-2 border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border px-2">Code</th>
-              <th className="border px-2">Structure</th>
-              <th className="border px-2">Type</th>
-              <th className="border px-2">Action</th>
-              <th className="border px-2">MSC</th>
-              <th className="border px-2">🔄 Perçues</th>
-              <th className="border px-2">✅ Réalisées</th>
-            </tr>
-          </thead>
-          <tbody>
-            {chainages.map((c, i) => {
-              const perçues = c.incidences.filter(x => x.perceived).map(x => x.name);
-              const réalisées = c.incidences.filter(x => x.realized).map(x => x.name);
+          <table className="w-full mt-2 border text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border px-2">Code</th>
+                <th className="border px-2">Structure</th>
+                <th className="border px-2">Type</th>
+                <th className="border px-2">Action</th>
+                <th className="border px-2">MSC</th>
+                <th className="border px-2">🔄 Perçues</th>
+                <th className="border px-2">✅ Réalisées</th>
+              </tr>
+            </thead>
+            <tbody>
+              {chainages.map((c, i) => {
+                const perçues = c.incidences.filter(x => x.perceived).map(x => x.name);
+                const réalisées = c.incidences.filter(x => x.realized).map(x => x.name);
 
-              return (
-                <React.Fragment key={i}>
-                  <tr
-                    className="cursor-pointer hover:bg-gray-100"
-                    onClick={() => setExpandedIndex(i === expandedIndex ? null : i)}
-                  >
-                    <td className="border px-2">{c.label}</td>
-                    <td className="border px-2">{c.structure}</td>
-                    <td className="border px-2">{c.responseType}</td>
-                    <td className="border px-2">{c.action}</td>
-                    <td className="border px-2">{c.msc}</td>
-                    <td className="border px-2">{perçues.join(", ")}</td>
-                    <td className="border px-2">{réalisées.join(", ")}</td>
-                  </tr>
-
-                  {expandedIndex === i && (
-                    <tr className="bg-blue-50">
-                      <td colSpan={7} className="p-4">
-                        <div className="flex flex-col items-start space-y-1">
-                          <div><strong>{c.action}</strong> ➡️</div>
-                          <div className="ml-4">{c.msc} ➡️</div>
-                          <div className="ml-8">
-                            ✅ <strong>Réalisées :</strong> {réalisées.join(" | ") || "Aucune"}
-                          </div>
-                          <div className="ml-8">
-                            🔄 <strong>Perçues :</strong> {perçues.join(" | ") || "Aucune"}
-                          </div>
-                        </div>
-                      </td>
+                return (
+                  <React.Fragment key={i}>
+                    <tr
+                      className="cursor-pointer hover:bg-gray-100"
+                      onClick={() => setExpandedIndex(i === expandedIndex ? null : i)}
+                    >
+                      <td className="border px-2">{c.label}</td>
+                      <td className="border px-2">{c.structure}</td>
+                      <td className="border px-2">{c.responseType}</td>
+                      <td className="border px-2">{c.action}</td>
+                      <td className="border px-2">{c.msc}</td>
+                      <td className="border px-2">{perçues.join(", ")}</td>
+                      <td className="border px-2">{réalisées.join(", ")}</td>
                     </tr>
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </tbody>
-        </table>
 
-        {adminMode && (
-          <button
-            className="bg-gray-800 text-white mt-4 px-4 py-2 rounded"
-            onClick={handleExportCSV}
-          >
-            📁 Exporter CSV
-          </button>
-        )}
-      </div>
-    )}
-  </div>
-);
+                    {expandedIndex === i && (
+                      <tr className="bg-blue-50">
+                        <td colSpan={7} className="p-4">
+                          <div className="flex flex-col items-start space-y-1">
+                            <div><strong>{c.action}</strong> ➡️</div>
+                            <div className="ml-4">{c.msc} ➡️</div>
+                            <div className="ml-8">
+                              ✅ <strong>Réalisées :</strong> {réalisées.join(" | ") || "Aucune"}
+                            </div>
+                            <div className="ml-8">
+                              🔄 <strong>Perçues :</strong> {perçues.join(" | ") || "Aucune"}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {adminMode && (
+            <button
+              className="bg-gray-800 text-white mt-4 px-4 py-2 rounded"
+              onClick={handleExportCSV}
+            >
+              📁 Exporter CSV
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 
